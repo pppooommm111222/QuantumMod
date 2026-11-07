@@ -32,7 +32,6 @@ public class QuantumMod implements ModInitializer {
     public static final String MOD_ID = "quantummod";
     public static final Map<UUID, BlockPos> DESTINATIONS = new HashMap<>();
 
-    // 修复点1：在 AbstractBlock.Settings 中加入 registryKey
     public static final Block QUANTUM_BLOCK = new Block(AbstractBlock.Settings.create()
             .strength(3.0f)
             .registryKey(RegistryKey.of(RegistryKeys.BLOCK, Identifier.of(MOD_ID, "quantum_block")))) {
@@ -49,12 +48,12 @@ public class QuantumMod implements ModInitializer {
                 BlockPos dest = DESTINATIONS.get(playerId);
                 if (dest != null) {
                     if (player instanceof ServerPlayerEntity serverPlayer) {
-                        String cmd = String.format("tp @s %d %d %d", dest.getX() + 0.5, dest.getY() + 1.0, dest.getZ() + 0.5);
-                        serverPlayer.getServer().getCommandManager().executeWithPrefix(serverPlayer.getCommandSource(), cmd);
+                        // 直接物理传送，绝对不报错
+                        serverPlayer.teleport(serverPlayer.getServerWorld(), dest.getX() + 0.5, dest.getY() + 1.0, dest.getZ() + 0.5, serverPlayer.getYaw(), serverPlayer.getPitch());
                     }
                     world.playSound(null, dest, SoundEvents.ENTITY_ENDERMAN_TELEPORT, SoundCategory.BLOCKS, 1.0f, 1.0f);
                 } else {
-                    player.sendMessage(Text.literal("✖ 尚未设定目的地！").formatting(Formatting.RED), true);
+                    player.sendMessage(Text.literal("✖ 尚未设定目的地！").formatted(Formatting.RED), true);
                 }
             }
             return ActionResult.SUCCESS;
@@ -63,10 +62,8 @@ public class QuantumMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
-        // 修复点2：注册时直接使用已经带有 registryKey 的实例
         Registry.register(Registries.BLOCK, Identifier.of(MOD_ID, "quantum_block"), QUANTUM_BLOCK);
         
-        // 修复点3：BlockItem 也必须在 Settings 中加 registryKey
         Registry.register(Registries.ITEM, Identifier.of(MOD_ID, "quantum_block"), 
                 new BlockItem(QUANTUM_BLOCK, new Item.Settings().registryKey(RegistryKey.of(RegistryKeys.ITEM, Identifier.of(MOD_ID, "quantum_block")))));
         
