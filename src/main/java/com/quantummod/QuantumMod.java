@@ -21,6 +21,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,7 +32,10 @@ public class QuantumMod implements ModInitializer {
     public static final String MOD_ID = "quantummod";
     public static final Map<UUID, BlockPos> DESTINATIONS = new HashMap<>();
 
-    public static final Block QUANTUM_BLOCK = new Block(AbstractBlock.Settings.create().strength(3.0f)) {
+    // 修复点1：在 AbstractBlock.Settings 中加入 registryKey
+    public static final Block QUANTUM_BLOCK = new Block(AbstractBlock.Settings.create()
+            .strength(3.0f)
+            .registryKey(RegistryKey.of(RegistryKeys.BLOCK, Identifier.of(MOD_ID, "quantum_block")))) {
         @Override
         public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit) {
             if (world.isClient) return ActionResult.SUCCESS;
@@ -49,7 +54,7 @@ public class QuantumMod implements ModInitializer {
                     }
                     world.playSound(null, dest, SoundEvents.ENTITY_ENDERMAN_TELEPORT, SoundCategory.BLOCKS, 1.0f, 1.0f);
                 } else {
-                    player.sendMessage(Text.literal("✖ 尚未设定目的地！").formatted(Formatting.RED), true);
+                    player.sendMessage(Text.literal("✖ 尚未设定目的地！").formatting(Formatting.RED), true);
                 }
             }
             return ActionResult.SUCCESS;
@@ -58,8 +63,13 @@ public class QuantumMod implements ModInitializer {
 
     @Override
     public void onInitialize() {
+        // 修复点2：注册时直接使用已经带有 registryKey 的实例
         Registry.register(Registries.BLOCK, Identifier.of(MOD_ID, "quantum_block"), QUANTUM_BLOCK);
-        Registry.register(Registries.ITEM, Identifier.of(MOD_ID, "quantum_block"), new BlockItem(QUANTUM_BLOCK, new Item.Settings()));
+        
+        // 修复点3：BlockItem 也必须在 Settings 中加 registryKey
+        Registry.register(Registries.ITEM, Identifier.of(MOD_ID, "quantum_block"), 
+                new BlockItem(QUANTUM_BLOCK, new Item.Settings().registryKey(RegistryKey.of(RegistryKeys.ITEM, Identifier.of(MOD_ID, "quantum_block")))));
+        
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.BUILDING_BLOCKS).register(content -> content.add(QUANTUM_BLOCK));
     }
 }
