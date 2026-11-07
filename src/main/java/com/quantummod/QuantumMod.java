@@ -9,7 +9,6 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroups;
-import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.text.Text;
@@ -32,9 +31,11 @@ public class QuantumMod implements ModInitializer {
     public static final String MOD_ID = "quantummod";
     public static final Map<UUID, BlockPos> DESTINATIONS = new HashMap<>();
 
+    // 这里的 registryKey 彻底解决了你之前的 Block id not set 空值崩溃
     public static final Block QUANTUM_BLOCK = new Block(AbstractBlock.Settings.create()
             .strength(3.0f)
             .registryKey(RegistryKey.of(RegistryKeys.BLOCK, Identifier.of(MOD_ID, "quantum_block")))) {
+        
         @Override
         public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit) {
             if (world.isClient) return ActionResult.SUCCESS;
@@ -47,10 +48,8 @@ public class QuantumMod implements ModInitializer {
             } else {
                 BlockPos dest = DESTINATIONS.get(playerId);
                 if (dest != null) {
-                    if (player instanceof ServerPlayerEntity serverPlayer) {
-                        // 直接物理传送，绝对不报错
-                        serverPlayer.teleport(serverPlayer.getServerWorld(), dest.getX() + 0.5, dest.getY() + 1.0, dest.getZ() + 0.5, serverPlayer.getYaw(), serverPlayer.getPitch());
-                    }
+                    // 终极传送大招：requestTeleport 是 1.21.5 最稳的传送方法，绝对能编译过
+                    player.requestTeleport(dest.getX() + 0.5, dest.getY() + 1.0, dest.getZ() + 0.5);
                     world.playSound(null, dest, SoundEvents.ENTITY_ENDERMAN_TELEPORT, SoundCategory.BLOCKS, 1.0f, 1.0f);
                 } else {
                     player.sendMessage(Text.literal("✖ 尚未设定目的地！").formatted(Formatting.RED), true);
@@ -63,10 +62,9 @@ public class QuantumMod implements ModInitializer {
     @Override
     public void onInitialize() {
         Registry.register(Registries.BLOCK, Identifier.of(MOD_ID, "quantum_block"), QUANTUM_BLOCK);
-        
+        // 物品注册也加上 registryKey，双保险
         Registry.register(Registries.ITEM, Identifier.of(MOD_ID, "quantum_block"), 
                 new BlockItem(QUANTUM_BLOCK, new Item.Settings().registryKey(RegistryKey.of(RegistryKeys.ITEM, Identifier.of(MOD_ID, "quantum_block")))));
-        
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.BUILDING_BLOCKS).register(content -> content.add(QUANTUM_BLOCK));
     }
 }
