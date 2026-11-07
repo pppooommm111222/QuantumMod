@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:orientation="vertical"
+android:background="#AA000000"
+android:padding="8dp">
+
+<Button
+android:id="@+id/btnStart"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:text="开始宏" />
+
+<Button
+android:id="@+id/btnCalibrate"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:layout_marginTop="4dp"
+android:text="测试偏移" />
+
+<Button
+android:id="@+id/btnStop"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:layout_marginTop="4dp"
+android:text="停止"
+android:backgroundTint="#FF0000"
+android:textColor="#FFFFFF" />
+
+<Button
+android:id="@+id/btnHide"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:layout_marginTop="4dp"
+android:text="隐藏悬浮球" />
+
+<Button
+android:id="@+id/btnExit"
+android:layout_width="wrap_content"
+android:layout_height="wrap_content"
+android:layout_marginTop="4dp"
+android:text="取消悬浮球"
+android:backgroundTint="#555555"
+android:textColor="#FFFFFF" />
+</LinearLayout>

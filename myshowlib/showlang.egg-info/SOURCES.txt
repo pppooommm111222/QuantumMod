@@ -1,0 +1,7 @@
+setup.py
+showlang.py
+showlang.egg-info/PKG-INFO
+showlang.egg-info/SOURCES.txt
+showlang.egg-info/dependency_links.txt
+showlang.egg-info/entry_points.txt
+showlang.egg-info/top_level.txt

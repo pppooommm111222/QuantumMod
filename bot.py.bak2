@@ -1,0 +1,79 @@
+import os
+import botpy
+from botpy import Client, Intents, Token
+from botpy.message import GroupMessage, C2CMessage
+from sandbox import run_code
+
+APPID = os.environ.get("QQ_BOT_APPID", "")
+TOKEN = os.environ.get("QQ_BOT_TOKEN", "")
+
+
+def build_text(message) -> str:
+    return (getattr(message, "content", "") or "").strip()
+
+
+MENU = "\n\n✅ 运行成功\n回复 1️⃣ 画图  2️⃣ 再跑  3️⃣ 看代码"
+
+
+class MyClient(Client):
+    async def on_group_at_message_create(self, message: GroupMessage):
+        code = build_text(message)
+        if code in ("1", "2", "3"):
+            reply = handle_menu(code)
+        else:
+            reply = str(run_code(code)) + MENU
+        await self.api.post_group_message(
+            group_openid=message.group_openid,
+            msg_type=0,
+            content=reply,
+            msg_id=message.id,
+        )
+
+    async def on_c2c_message_create(self, message: C2CMessage):
+        code = build_text(message)
+        if code in ("1", "2", "3"):
+            reply = handle_menu(code)
+        else:
+            reply = str(run_code(code)) + MENU
+        await self.api.post_c2c_message(
+            openid=message.author.user_openid,
+            msg_type=0,
+            content=reply,
+            msg_id=message.id,
+        )
+
+
+def handle_menu(code):
+    if code == "1":
+        draw = (
+            "import struct\n"
+            "W,H=120,60\n"
+            "rows=b''\n"
+            "for y in range(H):\n"
+            "    row=b''\n"
+            "    for x in range(W):\n"
+            "        d=((x-W/2)**2+(y-H/2)**2)**0.5\n"
+            "        v=int(abs(d%16-8)*16)\n"
+            "        row+=bytes([min(v,255),80,min(255-v,255)])\n"
+            "    pad=(4-(W*3)%4)%4\n"
+            "    row+=b'\\x00'*pad\n"
+            "    rows=row+rows\n"
+            "hdr=b'BM'+struct.pack('<IHHI',54+len(rows),0,0,54)\n"
+            "dib=struct.pack('<IiiHHIIiiII',40,W,H,1,24,0,len(rows),2835,2835,0,0)\n"
+            "open('demo.bmp','wb').write(hdr+dib+rows)\n"
+            "print('已生成 demo.bmp')\n"
+        )
+        return str(run_code(draw)) + MENU
+    elif code == "2":
+        return "请重新 @我 发送代码，我会再跑一次～" + MENU
+    elif code == "3":
+        return "把你想看的代码直接 @我 发过来就行～" + MENU
+
+
+intents = Intents(public_messages=True)
+
+import asyncio
+loop = asyncio.new_event_loop()
+asyncio.set_event_loop(loop)
+client = MyClient(intents=intents)
+loop.run_until_complete(client.run(APPID, TOKEN))
